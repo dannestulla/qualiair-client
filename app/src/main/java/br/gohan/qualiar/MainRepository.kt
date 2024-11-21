@@ -1,6 +1,5 @@
 package br.gohan.qualiar
 
-import android.util.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -12,9 +11,8 @@ class MainRepository(
     private val TAG = "MainRepository"
 
     suspend fun sendToken(token: String) {
-        val response = httpClient.post("$baseUrl/save-token") {
+        httpClient.post("$baseUrl/save-token") {
             setBody(token)
         }
-        Log.i(TAG, "sendToken: ${response.status}")
     }
 }
