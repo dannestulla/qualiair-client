@@ -25,7 +25,7 @@ class MainViewModel(
     val model =
         GenerativeModel(
             modelName = "gemini-1.5-flash",
-            apiKey = "AIzaSyA3fNdN7xgXqKgE_CFLJ2WZOtfu8eAJf-4"
+            apiKey = BuildConfig.API_KEY
         )
 
     fun sendPrompt(
@@ -69,12 +69,6 @@ class MainViewModel(
     fun getAirPollution() {
         viewModelScope.launch {
             mainRepository.getAirPollutionData(token)
-        }
-    }
-
-    fun generateIndex() {
-        viewModelScope.launch {
-            mainRepository.fetchOpenWeatherData(token,-23.5505, -46.6333)
         }
     }
 }
