@@ -8,7 +8,6 @@ import androidx.core.app.NotificationCompat
 import br.gohan.qualiar.R
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import kotlinx.serialization.json.Json
 
 class NotificationHelper : FirebaseMessagingService() {
 

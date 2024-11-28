@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import br.gohan.qualiar.ui.MainScreen
 import br.gohan.qualiar.ui.theme.QualiArTheme
 import com.google.firebase.FirebaseApp
 
@@ -28,8 +29,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    //BakingScreen()
-                     MainScreen()
+                    MainScreen()
                 }
             }
         }

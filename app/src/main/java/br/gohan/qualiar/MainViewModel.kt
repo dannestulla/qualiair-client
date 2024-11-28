@@ -3,72 +3,62 @@ package br.gohan.qualiar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.gohan.qualiar.data.MainRepository
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.content
+import br.gohan.qualiar.data.NetworkState
+import br.gohan.qualiar.ui.UiState
+import br.gohan.qualiar.ui.toUiState
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val mainRepository: MainRepository
 ) : ViewModel() {
-    private lateinit var token : String
 
-    private val _uiState: MutableStateFlow<UiState> =
-        MutableStateFlow(UiState.Initial)
-    val uiState: StateFlow<UiState> =
-        _uiState.asStateFlow()
+    private val _uiState: MutableStateFlow<UiState> = MutableStateFlow(UiState.Loading)
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
-    private val model =
-        GenerativeModel(
-            modelName = "gemini-1.5-flash",
-            apiKey = BuildConfig.API_KEY
-        )
+    init {
+        startNotificationService()
+        observeRepository()
+    }
 
-    fun sendPrompt(
-        airQuality: String
-    ) {
-        _uiState.value = UiState.Loading
-        val promptIA = BuildConfig.PROMPT_IA + airQuality
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val response = model.generateContent(
-                    content {
-                        text(promptIA)
-                    }
-                )
-                response.text?.let { outputContent ->
-                    _uiState.value = UiState.SuccessAI(outputContent)
+    private fun observeRepository() {
+        viewModelScope.launch {
+            mainRepository.networkState.map { networkState ->
+                when (networkState) {
+                    is NetworkState.Initial -> UiState.Loading
+                    is NetworkState.SuccessBackend ->
+                        UiState.Success(networkState.toUiState())
+
+                    is NetworkState.Error -> UiState.Error(
+                        message = networkState.errorMessage.message ?: "Um erro ocorreu"
+                    )
+
+                    is NetworkState.SuccessAI -> networkState.toUiState(uiState.value)
                 }
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(Exception(e.localizedMessage ?: ""))
+            }.collect { transformedState ->
+                _uiState.value = transformedState
             }
         }
     }
 
-    fun startNotificationService() {
+    private fun startNotificationService() {
         FirebaseMessaging.getInstance().token
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    token = task.result
-                    viewModelScope.launch {
+                    viewModelScope.launch(Dispatchers.IO) {
                         mainRepository.apply {
-                            saveToken(token)
-                            //generateIndex()
-                            val response = getAirPollutionData(token)
-                            _uiState.emit(response)
+                            saveToken(task.result)
+                            getAirQualityLevel()?.let {
+                                sendIaPrompt(BuildConfig.PROMPT_IA + it)
+                            }
                         }
                     }
                 }
             }
-    }
-
-    fun getAirPollution() {
-        viewModelScope.launch {
-            mainRepository.getAirPollutionData(token)
-        }
     }
 }

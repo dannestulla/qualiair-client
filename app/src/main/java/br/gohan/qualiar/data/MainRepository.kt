@@ -1,43 +1,83 @@
 package br.gohan.qualiar.data
 
-import android.util.Log
-import br.gohan.qualiar.UiState
+import br.gohan.qualiar.BuildConfig
+import com.google.ai.client.generativeai.GenerativeModel
+import com.google.ai.client.generativeai.type.content
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 class MainRepository(
     private val httpClient: HttpClient,
 ) {
-    private val baseUrl =
-        "https://f906-2804-14c-7980-9a02-7d29-7bd2-b7f6-8f70.ngrok-free.app"
-    private val notificationsEndpoint = "/notifications/save-token"
-    private val generateIndex = "/qualidade-ar/calculado"
-    private val TAG = "MainRepository"
+    private lateinit var token: String
+
+    private val _networkState: MutableStateFlow<NetworkState> =
+        MutableStateFlow(NetworkState.Initial)
+    val networkState: StateFlow<NetworkState> = _networkState.asStateFlow()
+
+    private val model =
+        GenerativeModel(
+            modelName = "gemini-1.5-flash",
+            apiKey = BuildConfig.API_KEY
+        )
 
     suspend fun saveToken(token: String) {
+        this.token = token
         try {
-            httpClient.post("$baseUrl$notificationsEndpoint") {
+            httpClient.post("${BuildConfig.BASE_URL}$notificationsEndpoint") {
                 setBody(token)
             }
-        } catch (error: Exception) {
-            Log.e(TAG, "saveToken: $error")
+        } catch (e: Exception) {
+            _networkState.update {
+                NetworkState.Error(Exception(e.localizedMessage ?: ""))
+            }
         }
     }
 
-    suspend fun getAirPollutionData(
-        token: String,
-    ): UiState {
-        return try {
-            val response = httpClient.get("$baseUrl$generateIndex") {
+    suspend fun getAirQualityLevel(): AirQualityLevel? {
+        try {
+            val response = httpClient.get("${BuildConfig.BASE_URL}$airQualityLevel") {
                 headers.append("token", token)
             }.body<AirQualityLevel>()
-            UiState.SuccessBackend(response)
-        } catch (error : Exception) {
-            Log.e(TAG, "getAirPollutionData error $error")
-            UiState.Error(error)
+            _networkState.update {
+                NetworkState.SuccessBackend(response)
+            }
+            return response
+        } catch (error: Exception) {
+            _networkState.update {
+                NetworkState.Error(error)
+            }
+            return null
         }
+    }
+
+    suspend fun sendIaPrompt(promptIA: String) {
+        try {
+            val response = model.generateContent(
+                content {
+                    text(promptIA)
+                }
+            )
+            _networkState.update {
+                NetworkState.SuccessAI(response.text!!, false)
+            }
+        } catch (e: Exception) {
+            _networkState.update {
+                NetworkState.Error(Exception(e.localizedMessage ?: ""))
+            }
+        }
+    }
+
+    companion object {
+        private val notificationsEndpoint = "/notifications/save-token"
+        private val airQualityLevel = "/qualidade-ar/calculado"
+        private val TAG = "MainRepository"
     }
 }
