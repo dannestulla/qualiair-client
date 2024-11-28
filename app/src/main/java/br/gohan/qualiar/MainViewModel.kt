@@ -22,7 +22,7 @@ class MainViewModel(
     val uiState: StateFlow<UiState> =
         _uiState.asStateFlow()
 
-    val model =
+    private val model =
         GenerativeModel(
             modelName = "gemini-1.5-flash",
             apiKey = BuildConfig.API_KEY
@@ -32,7 +32,7 @@ class MainViewModel(
         airQuality: String
     ) {
         _uiState.value = UiState.Loading
-        val promptIA = "me de recomendacoes para a seguinte poluicao do ar, em portugues e em apenas 3 bullet points, sendo que a localizacao e sao paulo e a pessoa tem 60 anos de idade + $airQuality"
+        val promptIA = BuildConfig.PROMPT_IA + airQuality
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val response = model.generateContent(

@@ -12,9 +12,8 @@ class MainRepository(
     private val httpClient: HttpClient,
 ) {
     private val baseUrl =
-        "https://b8af-201-37-127-223.ngrok-free.app"
+        "https://f906-2804-14c-7980-9a02-7d29-7bd2-b7f6-8f70.ngrok-free.app"
     private val notificationsEndpoint = "/notifications/save-token"
-    private val fetchOpenWeatherApi = "/qualidade-ar/gerar-dados"
     private val generateIndex = "/qualidade-ar/calculado"
     private val TAG = "MainRepository"
 
@@ -26,10 +25,6 @@ class MainRepository(
         } catch (error: Exception) {
             Log.e(TAG, "saveToken: $error")
         }
-    }
-
-    suspend fun fetchOpenWeatherData(token: String, latitude: Double, longitude: Double) {
-        // server gets data in open weather and saves in db, however client should not know about this
     }
 
     suspend fun getAirPollutionData(

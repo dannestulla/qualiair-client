@@ -11,7 +11,7 @@ sealed interface UiState {
 
     data object Loading : UiState
 
-    data class SuccessBackend(val outputText: AirQualityLevel) : UiState
+    data class SuccessBackend(val airQualityLevel: AirQualityLevel) : UiState
 
     data class SuccessAI(val outputText: String) : UiState
 
