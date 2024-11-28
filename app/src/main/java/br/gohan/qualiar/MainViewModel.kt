@@ -22,7 +22,7 @@ class MainViewModel(
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     init {
-        startNotificationService()
+        startService()
         observeRepository()
     }
 
@@ -46,7 +46,7 @@ class MainViewModel(
         }
     }
 
-    private fun startNotificationService() {
+    private fun startService() {
         FirebaseMessaging.getInstance().token
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {

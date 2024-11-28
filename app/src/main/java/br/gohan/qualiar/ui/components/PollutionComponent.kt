@@ -15,6 +15,7 @@ fun PollutionComponent(state: MeterState, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
+
     ) {
         CircularIndicator(state.arcValue, 240f)
         CenterTextsIndicator(

@@ -16,8 +16,8 @@ koinAndroid = "4.0.0"
 koinAndroidxCompose = "4.0.0"
 firebaseBom = "33.6.0"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
-okhttp = "4.11.0"
 ktor = "2.3.2"
+uiTextGoogleFonts = "1.7.5"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -50,6 +50,7 @@ ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "kto
 ktor-client-plugins = { module = "io.ktor:ktor-client-plugins", version.ref = "ktor" }
 ktor-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor"}
 ktor-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor"}
+androidx-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

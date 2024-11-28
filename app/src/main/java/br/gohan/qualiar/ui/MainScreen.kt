@@ -1,8 +1,11 @@
 package br.gohan.qualiar.ui
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -37,7 +40,12 @@ fun MainScreen(
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().animateContentSize(
+            animationSpec = tween(
+                durationMillis = 500,
+                easing = FastOutSlowInEasing
+            )
+        )
     ) {
         when (state) {
             is UiState.Loading -> {
@@ -87,7 +95,9 @@ private fun MainScreenStateless(state: MeterState, iaOutput: String?) {
                     modifier = Modifier
                         .padding(8.dp)
                         .fillMaxWidth()
-                        .animateItem()
+                        .animateItem(
+                            fadeInSpec = tween(durationMillis = 500)
+                        )
                 ) {
                     Text(iaCardsTexts[index].trim(), modifier = Modifier.padding(16.dp))
                 }

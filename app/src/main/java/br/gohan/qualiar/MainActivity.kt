@@ -13,7 +13,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import br.gohan.qualiar.ui.MainScreen
-import br.gohan.qualiar.ui.theme.QualiArTheme
+import br.gohan.qualiar.ui.new.AppTheme
 import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         askNotificationPermission()
 
         setContent {
-            QualiArTheme {
+            AppTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),

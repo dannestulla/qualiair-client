@@ -3,13 +3,14 @@ package br.gohan.qualiar.ui
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import br.gohan.qualiar.data.NetworkState
+import kotlin.math.roundToInt
 
 
 fun NetworkState.SuccessBackend.toUiState(): MeterState {
     this.response.let {
         return MeterState(
             maxMeterValue = it.indice.toFloat().div(100).div(2),
-            polutionText = it.indice.toFloat(),
+            polutionText = it.indice,
             description = it.descricao
         )
     }
@@ -23,12 +24,12 @@ fun NetworkState.SuccessAI.toUiState(uiState: UiState): UiState {
     }
 }
 
-fun Animatable<Float, AnimationVector1D>.toUiState(maxSpeed: Float, meterState: MeterState) =
+fun Animatable<Float, AnimationVector1D>.toUiState(maxValue: Float, meterState: MeterState) =
     MeterState(
         arcValue = value,
-        maxMeterValue = maxSpeed,
+        maxMeterValue = maxValue,
         inProgress = isRunning,
-        polutionText = meterState.polutionText,
+        polutionText = value.times(100).roundToInt().times(2),
         description = meterState.description
     )
 
