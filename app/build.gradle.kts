@@ -97,6 +97,8 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)
 
+    implementation(libs.play.services.location)
+
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
     implementation(libs.ktor.client.okhttp)

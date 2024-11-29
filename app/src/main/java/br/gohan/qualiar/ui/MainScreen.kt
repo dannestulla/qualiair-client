@@ -8,10 +8,13 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -23,8 +26,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import br.gohan.qualiar.MainViewModel
+import br.gohan.qualiar.helpers.Location
 import br.gohan.qualiar.ui.components.PollutionComponent
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -40,26 +46,42 @@ fun MainScreen(
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize().animateContentSize(
-            animationSpec = tween(
-                durationMillis = 500,
-                easing = FastOutSlowInEasing
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(10.dp)
+            .animateContentSize(
+                alignment = Alignment.Center,
+                animationSpec = tween(
+                    durationMillis = 500,
+                    easing = FastOutSlowInEasing
+                )
             )
-        )
     ) {
         when (state) {
             is UiState.Loading -> {
+                Text(
+                    "Gerando índice de poluição \n " +
+                            "da sua localização", textAlign = TextAlign.Center, fontSize = 20.sp
+                )
+                Spacer(Modifier.height(30.dp))
                 CircularProgressIndicator()
             }
 
             is UiState.Error -> {
                 Text(state.message)
+                Spacer(Modifier.height(10.dp))
+                Button({
+                    state.retry.invoke()
+                }) {
+                    Text("Tentar novamente")
+                }
             }
 
             is UiState.Success -> {
                 MainScreenStateless(
                     state.meterState,
-                    state.iaOutput
+                    state.iaOutput,
+                    state.location,
                 )
             }
         }
@@ -67,7 +89,7 @@ fun MainScreen(
 }
 
 @Composable
-private fun MainScreenStateless(state: MeterState, iaOutput: String?) {
+private fun MainScreenStateless(state: MeterState, iaOutput: String?, location: Location?) {
     val iaCardsTexts = iaOutput?.split(".")?.minus("\n")
     val animation = remember { Animatable(0f) }
     val maxMeterValue = remember { mutableFloatStateOf(0f) }
@@ -76,13 +98,17 @@ private fun MainScreenStateless(state: MeterState, iaOutput: String?) {
     LaunchedEffect(animation.value) {
         maxMeterValue.floatValue = max(maxMeterValue.floatValue, animation.value * 100f)
     }
-
+    location?.let { loc ->
+        loc.city?.uppercase()?.let { city -> Text(city, fontSize = 20.sp) }
+        loc.country?.uppercase()?.let { country -> Text(country, fontSize = 20.sp) }
+    }
+    Spacer(Modifier.height(10.dp))
     PollutionComponent(state = animation.toUiState(maxMeterValue.floatValue, state)) {
         coroutineScope.launch {
             animation.animateTo(
                 state.maxMeterValue,
                 animationSpec = spring(
-                    stiffness = 40f,
+                    stiffness = 20f,
                     dampingRatio = Spring.DampingRatioLowBouncy
                 )
             )

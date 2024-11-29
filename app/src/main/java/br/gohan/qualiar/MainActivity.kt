@@ -12,16 +12,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import br.gohan.qualiar.helpers.LocationHelper
 import br.gohan.qualiar.ui.MainScreen
 import br.gohan.qualiar.ui.new.AppTheme
 import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
         askNotificationPermission()
-
+        LocationHelper(this).invoke()
         setContent {
             AppTheme {
                 // A surface container using the 'background' color from the theme

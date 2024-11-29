@@ -1,9 +1,11 @@
 package br.gohan.qualiar
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.gohan.qualiar.data.MainRepository
 import br.gohan.qualiar.data.NetworkState
+import br.gohan.qualiar.helpers.LocationHelper
 import br.gohan.qualiar.ui.UiState
 import br.gohan.qualiar.ui.toUiState
 import com.google.firebase.messaging.FirebaseMessaging
@@ -17,12 +19,11 @@ import kotlinx.coroutines.launch
 class MainViewModel(
     private val mainRepository: MainRepository
 ) : ViewModel() {
-
-    private val _uiState: MutableStateFlow<UiState> = MutableStateFlow(UiState.Loading)
+    private val _uiState: MutableStateFlow<UiState> = MutableStateFlow(UiState.Loading())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     init {
-        startService()
+        getToken()
         observeRepository()
     }
 
@@ -30,15 +31,20 @@ class MainViewModel(
         viewModelScope.launch {
             mainRepository.networkState.map { networkState ->
                 when (networkState) {
-                    is NetworkState.Initial -> UiState.Loading
                     is NetworkState.SuccessBackend ->
-                        UiState.Success(networkState.toUiState())
+                        UiState.Success(
+                            networkState.toUiState(),
+                            location = LocationHelper.currentLocation.value
+                        )
 
                     is NetworkState.Error -> UiState.Error(
                         message = networkState.errorMessage.message ?: "Um erro ocorreu"
-                    )
+                    ) {
+                        startService(mainRepository.token)
+                    }
 
                     is NetworkState.SuccessAI -> networkState.toUiState(uiState.value)
+                    is NetworkState.Initial -> UiState.Loading()
                 }
             }.collect { transformedState ->
                 _uiState.value = transformedState
@@ -46,19 +52,41 @@ class MainViewModel(
         }
     }
 
-    private fun startService() {
+    private fun getToken() {
         FirebaseMessaging.getInstance().token
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    viewModelScope.launch(Dispatchers.IO) {
-                        mainRepository.apply {
-                            saveToken(task.result)
-                            getAirQualityLevel()?.let {
-                                sendIaPrompt(BuildConfig.PROMPT_IA + it)
-                            }
-                        }
+                    startService(task.result)
+                }
+            }
+    }
+
+    private fun setInitialState(): UiState {
+        val loading = UiState.Loading(LocationHelper.currentLocation.value?.city)
+        _uiState.value = loading
+        return loading
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startService(token: String) {
+        setInitialState()
+        viewModelScope.launch(Dispatchers.IO) {
+            mainRepository.apply {
+                saveToken(token)
+                LocationHelper.currentLocation.collect { location ->
+                    if (location == null) {
+                        return@collect
+                    }
+                    if (location.shouldUpdate) {
+                        generateIndex(
+                            location
+                        )
+                    }
+                    getAirQualityLevel()?.let {
+                        sendIaPrompt(BuildConfig.PROMPT_IA + LocationHelper.currentLocation + it)
                     }
                 }
             }
+        }
     }
 }

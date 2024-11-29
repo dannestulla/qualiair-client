@@ -1,4 +1,4 @@
-package br.gohan.qualiar.notification
+package br.gohan.qualiar.helpers
 
 import android.app.NotificationChannel
 import android.app.NotificationManager

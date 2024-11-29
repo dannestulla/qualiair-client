@@ -3,6 +3,7 @@ package br.gohan.qualiar.ui
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import br.gohan.qualiar.data.NetworkState
+import br.gohan.qualiar.helpers.LocationHelper
 import kotlin.math.roundToInt
 
 
@@ -18,9 +19,14 @@ fun NetworkState.SuccessBackend.toUiState(): MeterState {
 
 fun NetworkState.SuccessAI.toUiState(uiState: UiState): UiState {
     return if (uiState is UiState.Success) {
-        UiState.Success(uiState.meterState, this.outputText)
+        UiState.Success(
+            uiState.meterState,
+            iaOutput = this.outputText,
+            LocationHelper.currentLocation.value
+        )
     } else {
-        UiState.Error("Fluxo das chamadas com problema")
+        UiState.Error("Fluxo das chamadas com problema") {
+        }
     }
 }
 
