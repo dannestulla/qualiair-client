@@ -92,11 +92,6 @@ private fun MainScreenStateless(
 ) {
     val iaCardsTexts = iaOutput?.split(".")?.minus("\n")
 
-    location?.let { loc ->
-        loc.city?.uppercase()?.let { city -> Text(city, fontSize = 20.sp) }
-        loc.country?.uppercase()?.let { country -> Text(country, fontSize = 20.sp) }
-    }
-
     val animation = remember { Animatable(0f) }
     val maxMeterValue = remember { mutableFloatStateOf(0f) }
     LaunchedEffect(animation.value) {
@@ -104,7 +99,15 @@ private fun MainScreenStateless(
     }
     val coroutineScope = rememberCoroutineScope()
 
-    Column(Modifier.animateContentSize()) {
+    Column(
+        Modifier.animateContentSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        location?.let { loc ->
+            loc.city?.uppercase()?.let { city -> Text(city, fontSize = 20.sp) }
+            loc.country?.uppercase()?.let { country -> Text(country, fontSize = 20.sp) }
+        }
         PollutionComponent(animation.toUiState(maxMeterValue.floatValue, state)) {
             coroutineScope.launch {
                 animation.animateTo(
@@ -117,7 +120,6 @@ private fun MainScreenStateless(
                 onStartClick.invoke()
             }
         }
-
         if (!iaCardsTexts.isNullOrEmpty()) {
             LazyColumn {
                 items(iaCardsTexts.size) { index ->
