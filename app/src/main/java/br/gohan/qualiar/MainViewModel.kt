@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MainViewModel(
@@ -38,7 +39,7 @@ class MainViewModel(
                         )
 
                     is NetworkState.Error -> UiState.Error(
-                        message = networkState.errorMessage.message ?: "Um erro ocorreu"
+                        message = networkState.errorMessage.localizedMessage ?: "Um erro ocorreu"
                     ) {
                         startService(mainRepository.token)
                     }
@@ -83,9 +84,24 @@ class MainViewModel(
                         )
                     }
                     getAirQualityLevel()?.let {
-                        sendIaPrompt(BuildConfig.PROMPT_IA + LocationHelper.currentLocation + it)
+                        sendIaPrompt(promptAI + LocationHelper.currentLocation + it)
                     }
                 }
+            }
+        }
+    }
+
+    fun startedMeter() {
+        _uiState.update { state ->
+            if (state is UiState.Success) {
+                state.copy(
+                    meterState = state.meterState.copy(
+                        started = true,
+                        enableButton = false
+                    ),
+                )
+            } else {
+                state
             }
         }
     }

@@ -90,7 +90,7 @@ class MainRepository(
                 }
             )
             _networkState.update {
-                NetworkState.SuccessAI(response.text!!, false)
+                NetworkState.SuccessAI(response.text!!)
             }
         } catch (e: Exception) {
             _networkState.update {

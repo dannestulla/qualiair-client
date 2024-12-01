@@ -2,6 +2,7 @@ package br.gohan.qualiar.helpers
 
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.location.Address
 import android.location.Geocoder
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -22,7 +23,6 @@ class LocationHelper(
 
     fun invoke() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-
         if (hasLocationPermissions()) {
             getLastKnownLocation()
         } else {
@@ -52,20 +52,27 @@ class LocationHelper(
             if (location != null) {
                 val latitude = location.latitude
                 val longitude = location.longitude
-                val (city, country) = getCityName(latitude, longitude) ?: Pair(null, null)
+                getCityName(latitude, longitude) { addresses ->
+                    if (addresses.isNotEmpty()) {
+                        val (city, country) = Pair(
+                            addresses[0].subAdminArea,
+                            addresses[0].countryName
+                        ) // City name - country name
 
-                val savedCity = sharedPreferences.getString(LOCATION, null)
+                        val savedCity = sharedPreferences.getString(LOCATION, null)
 
-                val shouldUpdate = savedCity != city
+                        val shouldUpdate = savedCity != city
 
-                currentLocation.update {
-                    Location(
-                        latitude,
-                        longitude,
-                        city,
-                        country,
-                        shouldUpdate
-                    )
+                        currentLocation.update {
+                            Location(
+                                latitude,
+                                longitude,
+                                city,
+                                country,
+                                shouldUpdate
+                            )
+                        }
+                    }
                 }
             } else {
                 Toast.makeText(context, "Location not available", Toast.LENGTH_SHORT).show()
@@ -99,21 +106,10 @@ class LocationHelper(
         )
     }
 
-    private fun getCityName(latitude: Double, longitude: Double): Pair<String, String>? {
-        return try {
-            val geocoder = Geocoder(context, Locale.getDefault())
-            val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-            if (addresses?.isNotEmpty() == true) {
-                Pair(
-                    addresses[0].subAdminArea,
-                    addresses[0].countryName
-                ) // City name - country name
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
+    private fun getCityName(latitude: Double, longitude: Double, result: (List<Address>) -> Unit) {
+        val geocoder = Geocoder(context, Locale.getDefault())
+        geocoder.getFromLocation(latitude, longitude, 1) {
+            result.invoke(it)
         }
     }
 

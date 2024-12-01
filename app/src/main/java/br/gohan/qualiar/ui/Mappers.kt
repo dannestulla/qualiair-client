@@ -20,9 +20,9 @@ fun NetworkState.SuccessBackend.toUiState(): MeterState {
 fun NetworkState.SuccessAI.toUiState(uiState: UiState): UiState {
     return if (uiState is UiState.Success) {
         UiState.Success(
-            uiState.meterState,
-            iaOutput = this.outputText,
-            LocationHelper.currentLocation.value
+            uiState.meterState.copy(enableButton = true),
+            this.outputText,
+            LocationHelper.currentLocation.value,
         )
     } else {
         UiState.Error("Fluxo das chamadas com problema") {
@@ -34,8 +34,8 @@ fun Animatable<Float, AnimationVector1D>.toUiState(maxValue: Float, meterState: 
     MeterState(
         arcValue = value,
         maxMeterValue = maxValue,
-        inProgress = isRunning,
         polutionText = value.times(100).roundToInt().times(2),
-        description = meterState.description
+        description = meterState.description,
+        enableButton = meterState.enableButton
     )
 

@@ -32,16 +32,6 @@ android {
             "API_KEY",
             "\"${localProperties.getProperty("API_KEY")}\""
         )
-        buildConfigField(
-            "String",
-            "PROMPT_IA",
-            "\"${localProperties.getProperty("PROMPT_IA")}\""
-        )
-        buildConfigField(
-            "String",
-            "BASE_URL",
-            "\"${localProperties.getProperty("BASE_URL")}\""
-        )
     }
 
     buildTypes {

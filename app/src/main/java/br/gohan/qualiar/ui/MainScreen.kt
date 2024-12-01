@@ -2,10 +2,8 @@ package br.gohan.qualiar.ui
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -49,13 +47,6 @@ fun MainScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(10.dp)
-            .animateContentSize(
-                alignment = Alignment.Center,
-                animationSpec = tween(
-                    durationMillis = 500,
-                    easing = FastOutSlowInEasing
-                )
-            )
     ) {
         when (state) {
             is UiState.Loading -> {
@@ -78,54 +69,65 @@ fun MainScreen(
             }
 
             is UiState.Success -> {
-                MainScreenStateless(
-                    state.meterState,
-                    state.iaOutput,
-                    state.location,
-                )
+                with(state) {
+                    MainScreenStateless(
+                        meterState,
+                        if (meterState.started) iaOutput else null,
+                        location
+                    ) {
+                        viewModel.startedMeter()
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun MainScreenStateless(state: MeterState, iaOutput: String?, location: Location?) {
+private fun MainScreenStateless(
+    state: MeterState,
+    iaOutput: String?,
+    location: Location?,
+    onStartClick: () -> Unit
+) {
     val iaCardsTexts = iaOutput?.split(".")?.minus("\n")
-    val animation = remember { Animatable(0f) }
-    val maxMeterValue = remember { mutableFloatStateOf(0f) }
-    val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(animation.value) {
-        maxMeterValue.floatValue = max(maxMeterValue.floatValue, animation.value * 100f)
-    }
     location?.let { loc ->
         loc.city?.uppercase()?.let { city -> Text(city, fontSize = 20.sp) }
         loc.country?.uppercase()?.let { country -> Text(country, fontSize = 20.sp) }
     }
-    Spacer(Modifier.height(10.dp))
-    PollutionComponent(state = animation.toUiState(maxMeterValue.floatValue, state)) {
-        coroutineScope.launch {
-            animation.animateTo(
-                state.maxMeterValue,
-                animationSpec = spring(
-                    stiffness = 20f,
-                    dampingRatio = Spring.DampingRatioLowBouncy
-                )
-            )
-        }
+
+    val animation = remember { Animatable(0f) }
+    val maxMeterValue = remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(animation.value) {
+        maxMeterValue.floatValue = max(maxMeterValue.floatValue, animation.value * 100f)
     }
-    if (!iaCardsTexts.isNullOrEmpty()) {
-        LazyColumn {
-            items(iaCardsTexts.size) { index ->
-                Card(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .fillMaxWidth()
-                        .animateItem(
-                            fadeInSpec = tween(durationMillis = 500)
-                        )
-                ) {
-                    Text(iaCardsTexts[index].trim(), modifier = Modifier.padding(16.dp))
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(Modifier.animateContentSize()) {
+        PollutionComponent(animation.toUiState(maxMeterValue.floatValue, state)) {
+            coroutineScope.launch {
+                animation.animateTo(
+                    state.maxMeterValue,
+                    animationSpec = spring(
+                        stiffness = 20f,
+                        dampingRatio = Spring.DampingRatioLowBouncy
+                    )
+                )
+                onStartClick.invoke()
+            }
+        }
+
+        if (!iaCardsTexts.isNullOrEmpty()) {
+            LazyColumn {
+                items(iaCardsTexts.size) { index ->
+                    Card(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(iaCardsTexts[index].trim(), modifier = Modifier.padding(16.dp))
+                    }
                 }
             }
         }

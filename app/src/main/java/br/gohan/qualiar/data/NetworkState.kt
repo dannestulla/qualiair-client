@@ -6,7 +6,7 @@ sealed class NetworkState {
 
     data class SuccessBackend(val response: AirQualityLevel) : NetworkState()
 
-    data class SuccessAI(val outputText: String, val show: Boolean) : NetworkState()
+    data class SuccessAI(val outputText: String) : NetworkState()
 
     data class Error(val errorMessage: Exception) : NetworkState()
 }
