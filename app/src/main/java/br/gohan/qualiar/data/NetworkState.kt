@@ -8,5 +8,6 @@ sealed class NetworkState {
 
     data class SuccessAI(val outputText: String) : NetworkState()
 
-    data class Error(val errorMessage: Exception) : NetworkState()
+    data class Error(val errorMessage: String) : NetworkState()
 }
+

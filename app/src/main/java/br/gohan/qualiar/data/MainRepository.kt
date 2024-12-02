@@ -1,7 +1,6 @@
 package br.gohan.qualiar.data
 
 import android.content.SharedPreferences
-import android.util.Log
 import br.gohan.qualiar.BuildConfig
 import br.gohan.qualiar.helpers.Location
 import br.gohan.qualiar.helpers.LocationHelper.Companion.LOCATION
@@ -15,7 +14,6 @@ import io.ktor.client.request.setBody
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 
 class MainRepository(
     private val httpClient: HttpClient,
@@ -35,19 +33,15 @@ class MainRepository(
 
     suspend fun saveToken(token: String) {
         this.token = token
-        try {
+        handleRequest(_networkState) {
             httpClient.post(notificationsEndpoint) {
                 setBody(token)
-            }
-        } catch (e: Exception) {
-            _networkState.update {
-                NetworkState.Error(Exception(e.localizedMessage ?: ""))
             }
         }
     }
 
     suspend fun generateIndex(location: Location) {
-        try {
+        handleRequest(_networkState) {
             httpClient.get(generateIndexEndpoint) {
                 headers.append("token", token)
                 url {
@@ -60,42 +54,25 @@ class MainRepository(
                 LOCATION,
                 location.city
             ).apply()
-        } catch (error: Exception) {
-            Log.e(TAG, "saveToken: $error")
         }
     }
 
     suspend fun getAirQualityLevel(): AirQualityLevel? {
-        try {
+        return handleRequest(_networkState) {
             val response = httpClient.get(airQualityLevel) {
                 headers.append("token", token)
             }.body<AirQualityLevel>()
-            _networkState.update {
-                NetworkState.SuccessBackend(response)
-            }
-            return response
-        } catch (error: Exception) {
-            _networkState.update {
-                NetworkState.Error(error)
-            }
-            return null
+            response
         }
     }
 
     suspend fun sendIaPrompt(promptIA: String) {
-        try {
-            val response = model.generateContent(
+        handleRequest(_networkState) {
+            model.generateContent(
                 content {
                     text(promptIA)
                 }
             )
-            _networkState.update {
-                NetworkState.SuccessAI(response.text!!)
-            }
-        } catch (e: Exception) {
-            _networkState.update {
-                NetworkState.Error(Exception(e.localizedMessage ?: ""))
-            }
         }
     }
 

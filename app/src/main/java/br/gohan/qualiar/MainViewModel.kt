@@ -39,7 +39,7 @@ class MainViewModel(
                         )
 
                     is NetworkState.Error -> UiState.Error(
-                        message = networkState.errorMessage.localizedMessage ?: "Um erro ocorreu"
+                        message = networkState.errorMessage
                     ) {
                         startService(mainRepository.token)
                     }
