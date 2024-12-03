@@ -31,13 +31,12 @@ import br.gohan.qualiar.MainViewModel
 import br.gohan.qualiar.helpers.Location
 import br.gohan.qualiar.ui.components.PollutionComponent
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 import kotlin.math.max
 
 
 @Composable
 fun MainScreen(
-    viewModel: MainViewModel = koinViewModel(),
+    viewModel: MainViewModel
 ) {
     val state = viewModel.uiState.collectAsState().value
 

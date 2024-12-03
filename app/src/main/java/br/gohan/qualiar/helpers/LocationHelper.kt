@@ -1,5 +1,6 @@
 package br.gohan.qualiar.helpers
 
+import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Address
@@ -21,33 +22,9 @@ class LocationHelper(
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private val sharedPreferences: SharedPreferences by inject()
 
-    fun invoke() {
+    @SuppressLint("MissingPermission")
+    fun getLastKnownLocation(completed: (Location) -> Unit) {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-        if (hasLocationPermissions()) {
-            getLastKnownLocation()
-        } else {
-            requestLocationPermissions(context)
-        }
-    }
-
-    private fun getLastKnownLocation() {
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                context,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
         fusedLocationClient.lastLocation.addOnSuccessListener { location ->
             if (location != null) {
                 val latitude = location.latitude
@@ -62,16 +39,13 @@ class LocationHelper(
                         val savedCity = sharedPreferences.getString(LOCATION, null)
 
                         val shouldUpdate = savedCity != city
-
-                        currentLocation.update {
-                            Location(
-                                latitude,
-                                longitude,
-                                city,
-                                country,
-                                shouldUpdate
-                            )
-                        }
+                        completed.invoke( Location(
+                            latitude,
+                            longitude,
+                            city,
+                            country,
+                            shouldUpdate
+                        ))
                     }
                 }
             } else {
@@ -82,29 +56,6 @@ class LocationHelper(
         }
     }
 
-    private fun hasLocationPermissions(): Boolean {
-        return ActivityCompat.checkSelfPermission(
-            context,
-            android.Manifest.permission.ACCESS_FINE_LOCATION
-        ) ==
-                PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(
-                    context,
-                    android.Manifest.permission.ACCESS_COARSE_LOCATION
-                ) ==
-                PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun requestLocationPermissions(mainActivity: ComponentActivity) {
-        ActivityCompat.requestPermissions(
-            mainActivity,
-            arrayOf(
-                android.Manifest.permission.ACCESS_FINE_LOCATION,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            ),
-            LOCATION_REQUEST_CODE
-        )
-    }
 
     private fun getCityName(latitude: Double, longitude: Double, result: (List<Address>) -> Unit) {
         val geocoder = Geocoder(context, Locale.getDefault())
@@ -114,8 +65,6 @@ class LocationHelper(
     }
 
     companion object {
-        const val LOCATION_REQUEST_CODE = 100
-        val currentLocation = MutableStateFlow<Location?>(null)
         const val LOCATION = "location"
     }
 }

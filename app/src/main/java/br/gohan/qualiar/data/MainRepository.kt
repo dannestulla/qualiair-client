@@ -17,9 +17,9 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class MainRepository(
     private val httpClient: HttpClient,
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences,
+    private val token: String
 ) {
-    lateinit var token: String
 
     private val _networkState: MutableStateFlow<NetworkState> =
         MutableStateFlow(NetworkState.Initial)
@@ -31,8 +31,7 @@ class MainRepository(
             apiKey = BuildConfig.API_KEY
         )
 
-    suspend fun saveToken(token: String) {
-        this.token = token
+    suspend fun saveToken() {
         handleRequest(_networkState) {
             httpClient.post(notificationsEndpoint) {
                 setBody(token)

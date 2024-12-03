@@ -16,7 +16,6 @@ class NotificationHelper : FirebaseMessagingService() {
         val title = remoteMessage.notification?.title
         val body = remoteMessage.notification?.body
 
-
         showNotification(title, body)
     }
 

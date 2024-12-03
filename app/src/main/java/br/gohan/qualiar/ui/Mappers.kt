@@ -3,6 +3,7 @@ package br.gohan.qualiar.ui
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import br.gohan.qualiar.data.NetworkState
+import br.gohan.qualiar.helpers.Location
 import br.gohan.qualiar.helpers.LocationHelper
 import kotlin.math.roundToInt
 
@@ -17,12 +18,12 @@ fun NetworkState.SuccessBackend.toUiState(): MeterState {
     }
 }
 
-fun NetworkState.SuccessAI.toUiState(uiState: UiState): UiState {
+fun NetworkState.SuccessAI.toUiState(uiState: UiState, location: Location): UiState {
     return if (uiState is UiState.Success) {
         UiState.Success(
             uiState.meterState.copy(enableButton = true),
             this.outputText,
-            LocationHelper.currentLocation.value,
+            location,
         )
     } else {
         UiState.Error("Fluxo das chamadas com problema") {
