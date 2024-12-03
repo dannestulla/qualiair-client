@@ -47,8 +47,6 @@ class MainActivity : ComponentActivity(), KoinComponent {
         if (location != null && token != null) {
             val viewModel: MainViewModel = get { parametersOf(location, token) }
             startApp(viewModel)
-        } else {
-            loadingScreen()
         }
     }.launchIn(
         lifecycleScope
@@ -61,11 +59,12 @@ class MainActivity : ComponentActivity(), KoinComponent {
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
             if (permissions.values.all { it }) {
-                checkForTokenAndLocation()
+                fetchTokenAndLocation()
             } else {
                 showErrorMessage()
             }
         }
+        loadingScreen()
         checkPermissions()
     }
 
@@ -75,15 +74,13 @@ class MainActivity : ComponentActivity(), KoinComponent {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
         )
-
         val permissionsToRequest = permissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
-
         if (permissionsToRequest.isNotEmpty()) {
             permissionsLauncher.launch(permissionsToRequest.toTypedArray())
         } else {
-            checkForTokenAndLocation()
+            fetchTokenAndLocation()
         }
     }
 
@@ -95,7 +92,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
         ).show()
     }
 
-    private fun checkForTokenAndLocation() {
+    private fun fetchTokenAndLocation() {
         lifecycleScope.launch {
             FirebaseMessaging.getInstance().token.addOnSuccessListener { newToken ->
                 token.update { newToken }
